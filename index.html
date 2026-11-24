@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NoniChat</title>
+<style>
+:root{--bg:#fff;--bg2:#f2f2f7;--tx:#111;--sub:#8e8e93;--ln:#e5e5ea;--ac:#0a84ff;--me:#0a84ff;--you:#e9e9eb;--youtx:#111}
+:root{--gl:rgba(255,255,255,.55);--glb:rgba(255,255,255,.75);--ac2:rgba(10,132,255,.14)}
+:root[data-theme=dark]{--bg:#000;--bg2:#1c1c1e;--tx:#f5f5f7;--sub:#98989f;--ln:#2c2c2e;--you:#26262a;--youtx:#f5f5f7;--gl:rgba(44,44,48,.55);--glb:rgba(255,255,255,.12)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]):not([data-theme=dark]){--bg:#000;--bg2:#1c1c1e;--tx:#f5f5f7;--sub:#98989f;--ln:#2c2c2e;--you:#26262a;--youtx:#f5f5f7;--gl:rgba(44,44,48,.55);--glb:rgba(255,255,255,.12)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
+#app{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+button{font:inherit;border:0;background:none;color:var(--ac);cursor:pointer}
+input{font:inherit;color:var(--tx);width:100%;padding:13px 14px;border:0;border-radius:12px;background:var(--bg2);outline:0}
+.top{padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;min-height:50px}
+.top h1{margin:0;font-size:30px;font-weight:700}
+.ttl{font-weight:600;font-size:17px}
+.scroll{flex:1;overflow-y:auto}
+.row{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
+.row:active{background:var(--bg2)}
+.av{width:50px;height:50px;border-radius:50%;color:#fff;font-weight:600;font-size:20px;display:flex;align-items:center;justify-content:center;flex:none}
+.rb{flex:1;min-width:0;border-bottom:1px solid var(--ln);padding-bottom:10px}
+.rn{display:flex;justify-content:space-between;font-weight:600}
+.rn small{color:var(--sub);font-weight:400;font-size:13px}
+.rl{color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;max-width:420px;width:100%;margin:0 auto;gap:12px}
+.logo{width:84px;height:84px;border-radius:22px;background:linear-gradient(135deg,#34aadc,#0a84ff);color:#fff;font-size:44px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+.btn{background:var(--ac);color:#fff;border-radius:12px;padding:13px;font-weight:600;width:100%}
+.btn.g{background:var(--bg2);color:var(--tx)}
+.seg{display:flex;background:var(--bg2);border-radius:10px;padding:2px}
+.seg button{flex:1;padding:8px;border-radius:8px;color:var(--tx)}
+.seg .on{background:var(--bg);box-shadow:0 1px 3px #0003;font-weight:600}
+.err{color:#ff3b30;font-size:14px;text-align:center;min-height:18px}
+.msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:4px;background:var(--bg)}
+.m{max-width:78%;padding:8px 13px;border-radius:18px;word-wrap:break-word;white-space:pre-wrap}
+.m.me{align-self:flex-end;background:var(--me);color:#fff;border-bottom-right-radius:5px}
+.m.you{align-self:flex-start;background:var(--you);color:var(--youtx);border-bottom-left-radius:5px}
+.m small{display:block;font-size:10px;opacity:.65;text-align:right;margin-top:2px}
+.comp{display:flex;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0));border-top:1px solid var(--ln);background:var(--bg2);align-items:center}
+.comp input{border-radius:20px;background:var(--bg)}
+.send{background:var(--ac);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;flex:none}
+.hdr{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--ln);background:var(--bg2)}
+.hdr .av{width:36px;height:36px;font-size:15px}
+.card{background:var(--bg2);border-radius:14px;margin:12px 16px;overflow:hidden}
+.card>div{padding:12px 14px;border-bottom:1px solid var(--ln);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card>div:last-child{border:0}
+.empty{text-align:center;color:var(--sub);padding:60px 30px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px}
+
+.scroll{padding-bottom:120px}
+.tabs{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:2px;padding:6px;border-radius:34px;background:var(--gl);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);border:1px solid var(--glb);box-shadow:0 8px 30px #0002;z-index:5}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;border-radius:28px;color:var(--tx);font-size:11px;font-weight:600}
+.tabs button.on{background:var(--ac2);color:var(--ac)}
+.fab{position:fixed;right:20px;bottom:calc(98px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;background:var(--ac);color:#fff;font-size:22px;box-shadow:0 6px 18px #0a84ff66;z-index:4}
+.card>.srow{justify-content:flex-start;cursor:pointer}
+.srow i{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-style:normal;flex:none}
+.srow b{display:block;font-weight:500}.srow small{color:var(--sub)}
+.pills{display:flex;gap:8px;overflow-x:auto;padding:0 16px 8px}.pills button{padding:6px 14px;border-radius:16px;background:var(--bg2);color:var(--tx);white-space:nowrap;font-size:14px}.pills .on{background:var(--ac);color:#fff}
+input[type=checkbox]{width:22px;height:22px;padding:0;accent-color:var(--ac)}
+</style></head><body><div id="app"></div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,query,where,orderBy,onSnapshot,serverTimestamp,arrayUnion,arrayRemove}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const fb=initializeApp({apiKey:"AIzaSyDsTgset1Zu8QKlqnRiJHQ8NPqofKSaZ-4",authDomain:"nonichat.firebaseapp.com",projectId:"nonichat",storageBucket:"nonichat.firebasestorage.app",messagingSenderId:"232368456089",appId:"1:232368456089:web:6bb1b70b18740cc0e01308"});
+const auth=getAuth(fb),db=getFirestore(fb);
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mail=u=>u.toLowerCase()+'@nonichat.app',okName=u=>/^[a-z0-9_]{3,20}$/i.test(u);
+const colors=['#ff9500','#ff2d55','#5856d6','#34c759','#af52de','#00b0c8','#ff3b30'];
+const av=(n,z)=>`<div class="av" style="background:${colors[(n||'?').charCodeAt(0)%colors.length]}${z?`;width:${z}px;height:${z}px;font-size:${Math.round(z*.42)}px`:''}">${esc((n||'?')[0].toUpperCase())}</div>`;
+const tm=d=>d?new Date(d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+let me=null,busy=false,mode='login',tab='chats',chats=[],unC,unM,openId=null;
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2200)}
+function msg(e){const c=e.code||'';return({'auth/email-already-in-use':'This username is already taken','auth/invalid-credential':'Wrong username or password','auth/weak-password':'Password must be at least 6 characters','auth/network-request-failed':'Check your internet connection','auth/popup-closed-by-user':'Sign-in cancelled','auth/unauthorized-domain':'Add this site to Authorized domains in Firebase','auth/operation-not-allowed':'Enable this sign-in method in Firebase',taken:'This username is already taken'})[c]||(e.message||'Something went wrong')}
+
+function viewAuth(){
+ app.innerHTML=`<div class="center"><div class="logo">N</div><h1 style="text-align:center;margin:0 0 8px">NoniChat</h1>
+ <div class="seg"><button id="t1" class="${mode=='login'?'on':''}">Log in</button><button id="t2" class="${mode=='signup'?'on':''}">Sign up</button></div>
+ <input id="u" placeholder="Username" autocapitalize="none" autocomplete="username"><input id="p" type="password" placeholder="Password" autocomplete="current-password">
+ <div class="err" id="er"></div><button class="btn" id="go">${mode=='login'?'Log in':'Create account'}</button>
+ <button class="btn g" id="gg">Continue with Google</button></div>`;
+ $('#t1').onclick=()=>{mode='login';viewAuth()};$('#t2').onclick=()=>{mode='signup';viewAuth()};
+ const er=t=>$('#er').textContent=t;
+ $('#go').onclick=async()=>{const u=$('#u').value.trim(),p=$('#p').value;
+  if(!okName(u))return er('Username: 3-20 characters, a-z, 0-9 and _ only');
+  if(p.length<6)return er('Password must be at least 6 characters');
+  er('');
+  try{
+   if(mode=='login')await signInWithEmailAndPassword(auth,mail(u),p);
+   else{busy=true;const c=await createUserWithEmailAndPassword(auth,mail(u),p);await claim(c.user,u.toLowerCase(),u);busy=false;init(auth.currentUser)}
+  }catch(e){busy=false;er(msg(e));if(auth.currentUser&&mode=='signup')init(auth.currentUser)}};
+ $('#gg').onclick=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){er(msg(e))}};
+}
+async function claim(user,uname,name){
+ const r=doc(db,'usernames',uname);
+ if((await getDoc(r)).exists())throw{code:'taken'};
+ await setDoc(r,{uid:user.uid});
+ await setDoc(doc(db,'users',user.uid),{username:uname,name,bio:''});
+}
+function viewClaim(u){
+ app.innerHTML=`<div class="center"><div class="logo">N</div><h2 style="text-align:center;margin:0">Choose your username</h2>
+ <input id="u" placeholder="Username (a-z, 0-9, _)" autocapitalize="none"><div class="err" id="er"></div>
+ <button class="btn" id="go">Continue</button><button id="lo">Log out</button></div>`;
+ $('#lo').onclick=()=>signOut(auth);
+ $('#go').onclick=async()=>{const n=$('#u').value.trim();if(!okName(n))return $('#er').textContent='Username: 3-20 characters, a-z, 0-9 and _ only';
+  try{await claim(u,n.toLowerCase(),u.displayName||n);init(u)}catch(e){$('#er').textContent=msg(e)}};
+}
+async function init(u){
+ if(!u)return viewAuth();
+ const s=await getDoc(doc(db,'users',u.uid));
+ if(!s.exists())return viewClaim(u);
+ me={uid:u.uid,...s.data()};
+ unC&&unC();
+ unC=onSnapshot(query(collection(db,'chats'),where('members','array-contains',me.uid)),sn=>{
+  sn.docChanges().forEach(ch=>{if(ch.type!='modified')return;const d=ch.doc.data(),o=d.members.find(x=>x!==me.uid);if(d.lastFrom&&d.lastFrom!=me.uid&&!(me.blocked||[]).includes(o)&&(openId!=ch.doc.id||document.hidden))notify((d.names||{})[o]||'New message',d.last)});
+  chats=sn.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.lastAt&&!(me.blocked||[]).includes(c.members.find(x=>x!==me.uid))).sort((a,b)=>b.lastAt-a.lastAt);
+  if(!openId&&$('#list'))renderList();
+ },e=>console.log(e));
+ viewMain();
+}
+onAuthStateChanged(auth,u=>{if(busy)return;if(!u){unC&&unC();me=null;return viewAuth()}init(u)});
+
+const lg=k=>{try{return localStorage.getItem(k)}catch(e){}},ls=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+function prefs(){document.documentElement.dataset.theme=lg('nc_theme')||'auto';document.documentElement.style.fontSize=(lg('nc_fs')||'16')+'px'}prefs();
+const ics={chats:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',contacts:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'};
+const svg=k=>'<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ics[k]+'</svg>';
+function sub(t,h){app.innerHTML=`<div class="hdr"><button id="bk">‹ Back</button><span class="ttl">${t}</span></div><div class="scroll">${h}</div>`;$('#bk').onclick=viewMain}
+function viewMain(){
+ openId=null;unM&&unM();
+ const T=[['chats','Chats'],['contacts','Contacts'],['set','Settings'],['me','Profile']];
+ app.innerHTML=`<div id="body" style="flex:1;display:flex;flex-direction:column;min-height:0"></div><nav class="tabs">${T.map(([k,l])=>`<button data-k="${k}" class="${tab==k?'on':''}">${k=='me'?av(me.name,25):svg(k)}<span>${l}</span></button>`).join('')}</nav>`;
+ app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.k;viewMain()});
+ ({chats:viewChats,contacts:viewContacts,set:viewSettings,me:viewProfile})[tab]();
+}
+function viewChats(){
+ $('#body').innerHTML=`<div class="top"><h1>Chats</h1></div><div style="padding:0 16px 8px"><input id="sq" placeholder="Search chats"></div><div id="fl" class="pills"></div><div class="scroll" id="list"></div><button class="fab" id="nw">✏️</button>`;
+ $('#nw').onclick=viewNew;$('#sq').oninput=renderList;pills();renderList();
+}
+function renderList(){
+ const l=$('#list');if(!l)return;
+ const q=($('#sq')?.value||'').toLowerCase().trim();
+ const cs=chats.filter(c=>{const o=c.members.find(x=>x!==me.uid);return((c.names||{})[o]||'').toLowerCase().includes(q)&&(!fold||fold.o.includes(o))});
+ if(!cs.length){l.innerHTML=`<div class="empty">${chats.length?'No results.':'No chats yet.<br>Tap ✏️ to start a chat with a username.'}</div>`;return}
+ l.innerHTML=cs.map(c=>{const o=c.members.find(x=>x!==me.uid),n=(c.names||{})[o]||'User';
+  return`<div class="row" data-o="${o}">${av(n)}<div class="rb"><div class="rn"><span>${esc(n)}</span><small>${tm(c.lastAt)}</small></div><div class="rl">${esc(c.last)}</div></div></div>`}).join('');
+ l.querySelectorAll('.row').forEach(r=>r.onclick=async()=>{const s=await getDoc(doc(db,'users',r.dataset.o));openChat({uid:r.dataset.o,...s.data()})});
+}
+async function viewContacts(){
+ $('#body').innerHTML=`<div class="top"><h1>Contacts</h1><button id="ad" style="font-size:30px">＋</button></div><div class="scroll" id="cl"><div class="empty">Loading…</div></div>`;
+ $('#ad').onclick=viewAddContact;
+ const ids=me.contacts||[];
+ if(!ids.length){$('#cl').innerHTML='<div class="empty">No contacts yet.<br>Tap + to add someone by username.</div>';return}
+ const us=(await Promise.all(ids.map(i=>getDoc(doc(db,'users',i))))).filter(x=>x.exists()).map(x=>({uid:x.id,...x.data()})).sort((a,b)=>a.name.localeCompare(b.name));
+ if(tab!='contacts'||!$('#cl'))return;
+ $('#cl').innerHTML=us.map((u,i)=>`<div class="row" data-i="${i}">${av(u.name)}<div class="rb"><div class="rn"><span>${esc(u.name)}</span></div><div class="rl">@${esc(u.username)}</div></div></div>`).join('');
+ $('#cl').querySelectorAll('.row').forEach(r=>r.onclick=()=>openChat(us[r.dataset.i]));
+}
+function viewAddContact(){
+ sub('Add contact','<div style="padding:16px"><input id="q" placeholder="Enter username" autocapitalize="none"><div class="err" id="er" style="margin:10px 0"></div><button class="btn" id="fd">Add contact</button></div>');
+ $('#fd').onclick=async()=>{const n=$('#q').value.trim().toLowerCase();if(!n)return;
+  try{const r=await getDoc(doc(db,'usernames',n));if(!r.exists())return $('#er').textContent='No user found';
+   const uid=r.data().uid;if(uid==me.uid)return $('#er').textContent='This is you 🙂';
+   await updateDoc(doc(db,'users',me.uid),{contacts:arrayUnion(uid)});me.contacts=[...new Set([...(me.contacts||[]),uid])];tab='contacts';toast('Contact added');viewMain()}catch(e){$('#er').textContent=msg(e)}};
+}
+let fold=null;
+function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.15)}catch(e){}}
+function notify(n,t){if(lg('nc_snd')!='0')beep();if(lg('nc_ntf')=='1'&&document.hidden&&'Notification' in window&&Notification.permission=='granted'){try{new Notification(n,{body:t})}catch(e){}}}
+function pills(){const f=$('#fl');if(!f)return;const F=me.folders||[];if(!F.length){f.innerHTML='';return}
+ f.innerHTML=[{n:'All'},...F].map((x,i)=>`<button data-i="${i}" class="${(i==0&&!fold)||(fold&&i>0&&fold.n==F[i-1].n)?'on':''}">${esc(x.n)}</button>`).join('');
+ f.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;fold=i?F[i-1]:null;pills();renderList()})}
+function viewPrivacy(){
+ const pw=auth.currentUser?.providerData[0]?.providerId=='password';
+ sub('Privacy &amp; Security',`<div class="card"><div class="srow" id="bl"><i style="background:#ff3b30">🚫</i><div><b>Blocked users</b><small>${(me.blocked||[]).length} blocked</small></div></div><div class="srow" id="pw"><i style="background:#34c759">🔑</i><div><b>Change password</b><small>${pw?'For username accounts':'Not available for Google login'}</small></div></div></div>`);
+ $('#bl').onclick=viewBlocked;$('#pw').onclick=()=>pw?viewPass():toast('Google accounts have no password here');
+}
+async function viewBlocked(){
+ sub('Blocked users','<div style="padding:16px"><input id="q" placeholder="Username to block" autocapitalize="none"><div class="err" id="er" style="margin:10px 0"></div><button class="btn" id="fd">Block</button></div><div id="bk2"></div>');
+ $('#fd').onclick=async()=>{const n=$('#q').value.trim().toLowerCase();if(!n)return;
+  try{const r=await getDoc(doc(db,'usernames',n));if(!r.exists())return $('#er').textContent='No user found';
+   const uid=r.data().uid;if(uid==me.uid)return $('#er').textContent='You cannot block yourself';
+   await updateDoc(doc(db,'users',me.uid),{blocked:arrayUnion(uid)});me.blocked=[...new Set([...(me.blocked||[]),uid])];toast('Blocked');viewBlocked()}catch(e){$('#er').textContent=msg(e)}};
+ const us=await Promise.all((me.blocked||[]).map(async i=>{const x=await getDoc(doc(db,'users',i));return{uid:i,...(x.data()||{name:'User',username:'?'})}}));
+ const box=$('#bk2');if(!box)return;
+ box.innerHTML=us.map(u=>`<div class="row"><div class="rb" style="display:flex;justify-content:space-between;align-items:center"><span>${esc(u.name)} <small style="color:var(--sub)">@${esc(u.username)}</small></span><button data-u="${u.uid}" style="color:#ff3b30">Unblock</button></div></div>`).join('')||'<div class="empty">No blocked users</div>';
+ box.querySelectorAll('button').forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,'users',me.uid),{blocked:arrayRemove(b.dataset.u)});me.blocked=me.blocked.filter(x=>x!=b.dataset.u);viewBlocked()});
+}
+function viewPass(){
+ sub('Change password','<div style="padding:16px;display:flex;flex-direction:column;gap:10px"><input id="o" type="password" placeholder="Current password"><input id="n" type="password" placeholder="New password (min 6)"><div class="err" id="er"></div><button class="btn" id="go">Update password</button></div>');
+ $('#go').onclick=async()=>{const u=auth.currentUser,n=$('#n').value;if(n.length<6)return $('#er').textContent='New password must be at least 6 characters';
+  try{await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,$('#o').value));await updatePassword(u,n);toast('Password updated');viewMain()}catch(e){$('#er').textContent=msg(e)}};
+}
+function viewNotif(){
+ sub('Notifications',`<div class="card"><div><span>Message sound</span><input type="checkbox" id="s1" ${lg('nc_snd')!='0'?'checked':''}></div><div><span>Browser alerts</span><input type="checkbox" id="s2" ${lg('nc_ntf')=='1'?'checked':''}></div></div><div class="empty" style="padding:10px 24px">Alerts work while NoniChat is open in your browser. Alerts when the app is fully closed need a server and will come in a later version.</div>`);
+ $('#s1').onchange=e=>ls('nc_snd',e.target.checked?'1':'0');
+ $('#s2').onchange=e=>{if(!e.target.checked)return ls('nc_ntf','0');
+  if(!('Notification' in window)){e.target.checked=false;return toast('Not supported on this browser')}
+  Notification.requestPermission().then(p=>{ls('nc_ntf',p=='granted'?'1':'0');if(p!='granted'){e.target.checked=false;toast('Permission denied')}})};
+}
+function viewData(){
+ sub('Data and Storage',`<div class="card"><div><span>Chats</span><span style="color:var(--sub)">${chats.length}</span></div><div><span>Contacts</span><span style="color:var(--sub)">${(me.contacts||[]).length}</span></div></div><div class="card"><div><button id="cl" style="width:100%;color:#ff3b30">Reset app preferences</button></div></div><div class="empty" style="padding:10px 24px">Messages are stored in the cloud, so they do not use your phone storage.</div>`);
+ $('#cl').onclick=()=>{['nc_theme','nc_fs','nc_snd','nc_ntf'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});prefs();toast('Preferences reset');viewData()};
+}
+function viewFolders(){
+ const F=me.folders||[],nm=c=>(c.names||{})[c.members.find(x=>x!==me.uid)]||'User';
+ sub('Chat Folders',`<div class="card">${F.map((f,i)=>`<div><span>${esc(f.n)} <small style="color:var(--sub)">${f.o.length} chats</small></span><button data-d="${i}" style="color:#ff3b30">Delete</button></div>`).join('')||'<div><span style="color:var(--sub)">No folders yet</span></div>'}</div>
+ <div style="padding:0 16px"><input id="fn" placeholder="New folder name"></div><div class="card">${chats.map((c,i)=>`<div><span>${esc(nm(c))}</span><input type="checkbox" data-c="${i}"></div>`).join('')||'<div><span style="color:var(--sub)">Start a chat first</span></div>'}</div><div style="padding:0 16px"><button class="btn" id="sv">Create folder</button></div>`);
+ const save=async a=>{try{await updateDoc(doc(db,'users',me.uid),{folders:a});me.folders=a;fold=null;viewFolders()}catch(e){toast('Could not save')}};
+ app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>save(F.filter((_,i)=>i!=+b.dataset.d)));
+ $('#sv').onclick=()=>{const n=$('#fn').value.trim(),o=[...app.querySelectorAll('[data-c]:checked')].map(x=>chats[+x.dataset.c].members.find(y=>y!==me.uid));
+  if(!n)return toast('Enter a folder name');if(!o.length)return toast('Select at least one chat');save([...F,{n,o}])};
+}
+function viewHelp(){
+ const q=[['How do I start a chat?','Open Chats, tap ✏️, enter your friend username and tap Find.'],['How do I add a contact?','Open Contacts, tap + and enter their username.'],['How do I change dark mode?','Settings, Chat Settings, Theme.'],['How do I make folders?','Settings, Chat Folders. Pick chats, name the folder and create it. Folders appear above your chat list.'],['I forgot my password','Username accounts cannot be reset by email yet. Use Google login or create a new account.']];
+ sub('Help',`<div class="card">${q.map(x=>`<div style="display:block"><b>${x[0]}</b><div style="color:var(--sub);margin-top:4px">${x[1]}</div></div>`).join('')}</div>`);
+}
+function viewNew(){
+ app.innerHTML=`<div class="hdr"><button id="bk">‹ Back</button><span class="ttl">New chat</span></div><div style="padding:16px"><input id="q" placeholder="Enter username" autocapitalize="none"><div class="err" id="er" style="margin-top:10px"></div><button class="btn" id="fd">Find</button></div>`;
+ $('#bk').onclick=viewMain;
+ $('#fd').onclick=async()=>{const n=$('#q').value.trim().toLowerCase();if(!n)return;
+  try{const r=await getDoc(doc(db,'usernames',n));if(!r.exists())return $('#er').textContent='No user found';
+   const uid=r.data().uid;if(uid==me.uid)return $('#er').textContent='This is you 🙂';
+   const s=await getDoc(doc(db,'users',uid));openChat({uid,...s.data()})}catch(e){$('#er').textContent=msg(e)}};
+}
+async function openChat(o){if((me.blocked||[]).includes(o.uid))return toast('Unblock this user first');
+ const id=[me.uid,o.uid].sort().join('_');openId=id;
+ await setDoc(doc(db,'chats',id),{members:[me.uid,o.uid],names:{[me.uid]:me.name,[o.uid]:o.name}},{merge:true});
+ app.innerHTML=`<div class="hdr"><button id="bk">‹</button>${av(o.name)}<div><div class="ttl">${esc(o.name)}</div><small style="color:var(--sub)">@${esc(o.username)}</small></div></div>
+ <div class="msgs" id="ms"></div><div class="comp"><input id="tx" placeholder="Message" autocomplete="off"><button class="send" id="sd">↑</button></div>`;
+ $('#bk').onclick=viewMain;
+ unM&&unM();
+ unM=onSnapshot(query(collection(db,'chats',id,'messages'),orderBy('at')),sn=>{
+  const ms=$('#ms');if(!ms)return;
+  ms.innerHTML=sn.docs.map(d=>{const m=d.data();return`<div class="m ${m.from==me.uid?'me':'you'}">${esc(m.text)}<small>${tm(m.at?.toMillis?.()||Date.now())}</small></div>`}).join('');
+  ms.scrollTop=ms.scrollHeight;
+ },e=>console.log(e));
+ const send=async()=>{const i=$('#tx'),t=i.value.trim();if(!t)return;i.value='';
+  try{await addDoc(collection(db,'chats',id,'messages'),{from:me.uid,text:t,at:serverTimestamp()});
+   await setDoc(doc(db,'chats',id),{last:t,lastAt:Date.now(),lastFrom:me.uid},{merge:true})}catch(e){toast('Message not sent');console.log(e)}};
+ $('#sd').onclick=send;$('#tx').onkeydown=e=>{if(e.key=='Enter')send()};
+}
+function viewSettings(){
+ const S=[['account','#0a84ff','👤','Account','Name, Username, Bio'],['chat','#ff9500','💬','Chat Settings','Theme, Text size'],['privacy','#34c759','🔑','Privacy &amp; Security','Last seen, Devices'],['notif','#ff3b30','🔔','Notifications','Sounds, Badges'],['data','#5856d6','📊','Data and Storage','Media download'],['folders','#32ade6','📁','Chat Folders','Sort chats into folders'],['help','#30b0c7','❓','Help','FAQ, Contact us']];
+ $('#body').innerHTML=`<div class="top"><h1>Settings</h1></div><div class="scroll"><div class="card">${S.map(r=>`<div class="srow" data-a="${r[0]}"><i style="background:${r[1]}">${r[2]}</i><div><b>${r[3]}</b><small>${r[4]}</small></div></div>`).join('')}</div>
+ <div class="card"><div><button id="lo" style="width:100%;color:#ff3b30">Log out</button></div></div><div class="empty" style="padding:16px">NoniChat v2</div></div>`;
+ $('#body').querySelectorAll('.srow').forEach(r=>r.onclick=()=>{const a=r.dataset.a;({account:viewAccount,chat:viewChatSettings,privacy:viewPrivacy,notif:viewNotif,data:viewData,folders:viewFolders,help:viewHelp})[a]()});
+ $('#lo').onclick=()=>signOut(auth);
+}
+function viewProfile(){
+ $('#body').innerHTML=`<div class="top"><h1>Profile</h1></div><div class="scroll"><div style="text-align:center;padding:16px"><div style="display:flex;justify-content:center">${av(me.name,96)}</div><h2 style="margin:12px 0 0">${esc(me.name)}</h2><div style="color:var(--sub)">@${esc(me.username)}</div><p style="color:var(--sub)">${esc(me.bio||'')}</p><button class="btn" id="ed" style="width:auto;padding:10px 26px">Edit profile</button></div></div>`;
+ $('#ed').onclick=viewAccount;
+}
+function viewAccount(){
+ sub('Account',`<div class="card"><div><span>Name</span><input id="nm" value="${esc(me.name)}" style="width:60%;text-align:right;background:none;padding:0"></div><div><span>Username</span><span style="color:var(--sub)">@${esc(me.username)}</span></div><div><span>Bio</span><input id="bo" value="${esc(me.bio)}" placeholder="Write something" style="width:60%;text-align:right;background:none;padding:0"></div></div><div class="card"><div><button id="sv" style="width:100%">Save changes</button></div></div>`);
+ $('#sv').onclick=async()=>{const n=$('#nm').value.trim()||me.name,b=$('#bo').value.trim();try{await updateDoc(doc(db,'users',me.uid),{name:n,bio:b});me.name=n;me.bio=b;toast('Saved');viewMain()}catch(e){toast('Could not save')}};
+}
+function viewChatSettings(){
+ const th=lg('nc_theme')||'auto',fs=lg('nc_fs')||'16';
+ sub('Chat Settings',`<div class="card"><div><span>Theme</span></div><div><div class="seg" style="width:100%">${['auto','light','dark'].map(x=>`<button data-t="${x}" class="${th==x?'on':''}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div></div></div><div class="card"><div><span>Text size</span><input id="fs" type="range" min="14" max="22" value="${fs}" style="width:60%;padding:0"></div></div>`);
+ app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ls('nc_theme',b.dataset.t);prefs();viewChatSettings()});
+ $('#fs').oninput=e=>{ls('nc_fs',e.target.value);prefs()};
+}
+</script></body></html>
