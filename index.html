@@ -171,16 +171,101 @@ function renderList(){
   return`<div class="row" data-o="${o}">${av(n,0,pc[o])}<div class="rb"><div class="rn"><span>${esc(n)}</span><small>${tm(c.lastAt)}</small></div><div class="rl">${esc(c.last)}</div></div></div>`}).join('');
  l.querySelectorAll('.row').forEach(r=>r.onclick=async()=>{const s=await getDoc(doc(db,'users',r.dataset.o));openChat({uid:r.dataset.o,...s.data()})});
 }
+
 async function viewContacts(){
- $('#body').innerHTML=`<div class="top"><h1>Contacts</h1><button id="ad" style="font-size:30px">＋</button></div><div class="card" style="margin:0 16px 8px"><div class="srow" id="iv">${ico('account')}<div><b>Invite from phone contacts</b><small>Send your app link by SMS</small></div></div></div><div class="scroll" id="cl"><div class="empty">Loading…</div></div>`;
- $('#ad').onclick=viewAddContact;$('#iv').onclick=viewInvite;
- const ids=me.contacts||[];
- if(!ids.length){$('#cl').innerHTML='<div class="empty">No contacts yet.<br>Tap + to add someone by username.</div>';return}
- const us=(await Promise.all(ids.map(i=>getDoc(doc(db,'users',i))))).filter(x=>x.exists()).map(x=>({uid:x.id,...x.data()})).sort((a,b)=>a.name.localeCompare(b.name));
- if(tab!='contacts'||!$('#cl'))return;
- $('#cl').innerHTML=us.map((u,i)=>`<div class="row" data-i="${i}">${av(u.name,0,u.photo)}<div class="rb"><div class="rn"><span>${esc(u.name)}</span></div><div class="rl">@${esc(u.username)}</div></div></div>`).join('');
- $('#cl').querySelectorAll('.row').forEach(r=>r.onclick=()=>openChat(us[r.dataset.i]));
+ const body='Join me on NoniChat: '+location.href.split('#')[0];
+
+ $('#body').innerHTML=`
+ <div class="top">
+   <h1>Contacts</h1>
+   <button id="ad" style="font-size:30px">＋</button>
+ </div>
+
+ <div class="card">
+   <div class="srow" id="load">
+     ${ico('account')}
+     <div>
+       <b>Sync Phone Contacts</b>
+       <small>Load contacts from your phone</small>
+     </div>
+   </div>
+ </div>
+
+ <div id="cl" class="scroll">
+   <div class="empty">
+     Tap Sync Phone Contacts to load your contacts.
+   </div>
+ </div>`;
+
+ $('#ad').onclick=viewAddContact;
+
+ $('#load').onclick=async()=>{
+   if(!('contacts' in navigator) ||
+      !('ContactsManager' in window)){
+     toast('Contact Picker is not supported. Use Chrome on Android.');
+     return;
+   }
+
+   try{
+     $('#cl').innerHTML='<div class="empty">Loading contacts...</div>';
+
+     const selected=await navigator.contacts.select(
+       ['name','tel'],
+       {multiple:true}
+     );
+
+     const unique=new Map();
+
+     selected.forEach(c=>{
+       const name=(c.name||[])[0]||'Unknown';
+
+       (c.tel||[]).forEach(number=>{
+         const phone=number.trim();
+
+         if(phone){
+           unique.set(phone,{name,phone});
+         }
+       });
+     });
+
+     const contacts=[...unique.values()];
+
+     if(!contacts.length){
+       $('#cl').innerHTML=
+       '<div class="empty">No contacts selected.</div>';
+       return;
+     }
+
+     $('#cl').innerHTML=contacts.map(c=>`
+       <div class="row">
+         ${av(c.name)}
+         <div class="rb">
+           <div class="rn">
+             <span>${esc(c.name)}</span>
+           </div>
+           <div class="rl">${esc(c.phone)}</div>
+         </div>
+         <a href="sms:${encodeURIComponent(c.phone)}?body=${encodeURIComponent(body)}"
+            style="color:var(--ac);font-weight:600;text-decoration:none">
+           Invite
+         </a>
+       </div>
+     `).join('');
+
+     toast(contacts.length+' contacts loaded');
+
+   }catch(e){
+     if(e.name==='AbortError'){
+       $('#cl').innerHTML=
+       '<div class="empty">Contact selection cancelled.</div>';
+     }else{
+       console.log(e);
+       toast('Could not load contacts');
+     }
+   }
+ };
 }
+
 function viewAddContact(){
  sub('Add contact','<div style="padding:16px"><input id="q" placeholder="Enter username" autocapitalize="none"><div class="err" id="er" style="margin:10px 0"></div><button class="btn" id="fd">Add contact</button></div>');
  $('#fd').onclick=async()=>{const n=$('#q').value.trim().toLowerCase();if(!n)return;
